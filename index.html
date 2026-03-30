@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PyTorch Training Cost Estimator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="font-sans antialiased bg-white max-w-5xl mx-auto my-16 px-4 text-gray-900">
+  
+  <div class="mb-6">
+    <h1 class="text-xl font-medium">PyTorch Training Cost Estimator</h1>
+    <p>Estimates per-epoch training cost for PyTorch model.</p>
+    <p>Load time from Modal Volume is included in the estimate rather than just timing when the GPU is active.</p>
+  </div>
+
+  <div class="flex flex-col space-y-4">
+    
+    <div>
+      <label class="block text-[13px] text-gray-500 font-medium mb-1.5">NN.Module (must be named Model)</label>
+      <textarea id="module_code" 
+        placeholder="PyTorch Module definition"
+        class="w-full h-72 px-3 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-gray-400 outline-none transition-all"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-[13px] text-gray-500 font-medium mb-1.5">Input Shape (must set variable tuple `input_shape`)</label>
+      <textarea id="shape_code" 
+        placeholder="batch_size = 128&#10;input_size = 16384&#10;input_shape = (batch_size, input_size)"
+        class="w-full h-28 px-3 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-gray-400 outline-none transition-all"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-[13px] text-gray-500 font-medium mb-1.5">Loss Function</label>
+      <input id="loss_function" type="text" placeholder="nn.CrossEntropyLoss()" 
+        class="w-full px-3 py-2 text-[15px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-gray-400 outline-none transition-all" />
+    </div>
+
+    <div>
+      <label class="block text-[13px] text-gray-500 font-medium mb-1.5">Optimizer</label>
+      <input id="optimizer" type="text" placeholder="torch.optim.SGD(model.parameters(), lr=1e-3)" 
+        class="w-full px-3 py-2 text-[15px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-gray-400 outline-none transition-all" />
+    </div>
+
+    <div>
+      <label class="block text-[13px] text-gray-500 font-medium mb-1.5">Training Examples Per Epoch</label>
+      <input id="training_examples" type="text" placeholder="1000000" 
+        class="w-full px-3 py-2 text-[15px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-gray-400 outline-none transition-all" />
+    </div>
+
+    <fieldset class="border border-gray-100 rounded-xl p-5 bg-gray-50/30">
+      <legend class="px-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Target Hardware</legend>
+      <div class="flex flex-col gap-3 mt-2">
+        
+        <div class="flex items-center">
+          <div class="flex items-center space-x-2 shrink-0">
+            <input type="radio" id="T4" name="target_hardware" value="T4" checked class="accent-black" />
+            <label for="T4" class="text-sm cursor-pointer font-medium text-gray-700">T4</label>
+          </div>
+          <div class="flex-grow border-b border-dotted border-gray-300 mx-2 mb-1"></div>
+          <span class="text-xs font-mono text-gray-500 shrink-0">$0.59 / hr</span>
+        </div>
+
+        <div class="flex items-center">
+          <div class="flex items-center space-x-2 shrink-0">
+            <input type="radio" id="A10" name="target_hardware" value="A10" class="accent-black" />
+            <label for="A10" class="text-sm cursor-pointer font-medium text-gray-700">A10</label>
+          </div>
+          <div class="flex-grow border-b border-dotted border-gray-300 mx-2 mb-1"></div>
+          <span class="text-xs font-mono text-gray-500 shrink-0">$1.10 / hr</span>
+        </div>
+
+        <div class="flex items-center">
+          <div class="flex items-center space-x-2 shrink-0">
+            <input type="radio" id="A100-40GB" name="target_hardware" value="A100-40GB" class="accent-black" />
+            <label for="A100-40GB" class="text-sm cursor-pointer font-medium text-gray-700">A100 (40GB)</label>
+          </div>
+          <div class="flex-grow border-b border-dotted border-gray-300 mx-2 mb-1"></div>
+          <span class="text-xs font-mono text-gray-500 shrink-0">$2.10 / hr</span>
+        </div>
+
+        <div class="flex items-center">
+          <div class="flex items-center space-x-2 shrink-0">
+            <input type="radio" id="H100" name="target_hardware" value="H100" class="accent-black" />
+            <label for="H100" class="text-sm cursor-pointer font-medium text-gray-700">H100</label>
+          </div>
+          <div class="flex-grow border-b border-dotted border-gray-300 mx-2 mb-1"></div>
+          <span class="text-xs font-mono text-gray-500 shrink-0">$3.95 / hr</span>
+        </div>
+
+        <div class="flex items-center">
+          <div class="flex items-center space-x-2 shrink-0">
+            <input type="radio" id="H200" name="target_hardware" value="H200" class="accent-black" />
+            <label for="H200" class="text-sm cursor-pointer font-medium text-gray-700">H200</label>
+          </div>
+          <div class="flex-grow border-b border-dotted border-gray-300 mx-2 mb-1"></div>
+          <span class="text-xs font-mono text-gray-500 shrink-0">$4.54 / hr</span>
+        </div>
+
+      </div>
+    </fieldset>
+
+    <fieldset class="border border-gray-100 rounded-xl p-5 bg-gray-50/30">
+      <legend class="px-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Compiler Settings</legend>
+      <div class="flex flex-col space-y-2 mt-2">
+        <div class="flex items-center space-x-2">
+          <input type="radio" id="use-torch-compile" name="compile" value="use-torch-compile" checked class="accent-black" />
+          <label for="use-torch-compile" class="text-sm cursor-pointer">Use torch.compile (recommended)</label>
+        </div>
+        <div class="flex items-center space-x-2">
+          <input type="radio" id="no-torch-compile" name="compile" value="no-torch-compile" class="accent-black" />
+          <label for="no-torch-compile" class="text-sm cursor-pointer">Don't use torch.compile</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <button id="btn" onclick="sendText()" 
+      class="w-full py-3 mt-4 bg-black text-white font-medium rounded-xl hover:bg-gray-800 active:scale-[0.98] transition-all disabled:bg-gray-300 disabled:cursor-not-allowed">
+      Estimate Training Cost
+    </button>
+
+    <div id="result" class="mt-8 text-sm font-mono whitespace-pre-wrap text-gray-700"></div>
+    <div id="error" class="mt-4 text-sm text-red-600 font-medium"></div>
+
+    <hr class="border-gray-100 my-8">
+
+    <div class="pb-12">
+      <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Architecture Presets</h2>
+      <div id="presets" class="flex gap-2">
+        <button onclick="fillPreset('mlp')" 
+          class="px-4 py-2 text-xs font-medium border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+          Simple MLP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
