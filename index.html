@@ -10,7 +10,6 @@
   <div class="mb-6">
     <h1 class="text-xl font-medium">PyTorch Training Cost Estimator</h1>
     <p>Estimates per-epoch training cost for PyTorch model.</p>
-    <p>Load time from Modal Volume is included in the estimate rather than just timing when the GPU is active.</p>
   </div>
 
   <div class="flex flex-col space-y-4">
@@ -118,6 +117,7 @@
       Estimate Training Cost
     </button>
 
+    <div id="price_per_epoch" class="mt-8 text-lg font-mono whitespace-pre-wrap text-gray-700"></div>
     <div id="result" class="mt-8 text-sm font-mono whitespace-pre-wrap text-gray-700"></div>
     <div id="error" class="mt-4 text-sm text-red-600 font-medium"></div>
 

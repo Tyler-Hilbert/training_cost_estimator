@@ -1,6 +1,6 @@
 // Makes a request to Modal using data on webpage, then updates webpage
 
-const MODAL_URL = "https://hilberttyler1--training-cost-estimator-training-cost.modal.run";
+const MODAL_URL = "https://hilberttyler1--training-cost-estimator-v2-training-cost.modal.run";
 
 async function sendText() {
     // Get data input
@@ -13,12 +13,14 @@ async function sendText() {
     const compile = document.querySelector('input[name="compile"]:checked').value;
 
     //
+    const pricePerEpochEL = document.getElementById("price_per_epoch");
     const resultEl = document.getElementById("result");
     const errorEl = document.getElementById("error");
     const btn = document.getElementById("btn");
 
     // Clear UI
     resultEl.textContent = "";
+    pricePerEpochEL.textContent = "";
     errorEl.textContent = "";
     btn.disabled = true;
     btn.textContent = "This may take a minute...";
@@ -41,6 +43,7 @@ async function sendText() {
         const data = await response.json();
         
         // Update UI
+        pricePerEpochEL.textContent = data.price_per_epoch
         resultEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 
     } catch (err) {
