@@ -125,14 +125,22 @@
 
     <div class="pb-12">
       <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Examples</h2>
-      <div id="presets" class="flex gap-2">
+      <div id="presets" class="flex flex-col space-y-2 items-start">
         <button onclick="fillPreset('mlp')"
           class="px-4 py-2 text-xs font-medium border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
-          MLP
+          MLP (CIFAR-10)
         </button>
         <button onclick="fillPreset('alexnet')"
           class="px-4 py-2 text-xs font-medium border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
           Alex Net
+        </button>
+        <button onclick="fillPreset('resnet50')" 
+          class="px-4 py-2 text-xs font-medium border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+          ResNet-50
+        </button>
+        <button onclick="fillPreset('transformer')" 
+          class="px-4 py-2 text-xs font-medium border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+          Transformer (Attention is All You Need)
         </button>
       </div>
     </div>

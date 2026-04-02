@@ -56,10 +56,11 @@ async function sendText() {
     }
 }
 
+// Presets are AI generated, don't assume they are the golden implementation.
 const PRESETS = {
-    mlp: {
+mlp: {
         module_code: `class Model(nn.Module):
-    def __init__(self, input_size=16384, layer_sizes=[16384, 16384], output_size=8192):
+    def __init__(self, input_size=3072, layer_sizes=[512, 256], output_size=10):
         super(Model, self).__init__()
         layers = []
         current_input_size = input_size
@@ -73,7 +74,7 @@ const PRESETS = {
     def forward(self, x):
         return self.network(x)`,
         shape_code: `batch_size = 128
-input_size = 16384
+input_size = 3072
 input_shape = (batch_size, input_size)`,
         loss_function: "nn.CrossEntropyLoss()",
         optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3)",
@@ -98,10 +99,10 @@ input_shape = (batch_size, input_size)`,
         self.maxpool3 = nn.MaxPool2d(kernel_size=3, stride=2)
         self.fc1 = nn.Linear(256 * 6 * 6, 4096)
         self.relu6 = nn.ReLU(inplace=True)
-        self.dropout1 = nn.Dropout(p=0.0)
+        self.dropout1 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(4096, 4096)
         self.relu7 = nn.ReLU(inplace=True)
-        self.dropout2 = nn.Dropout(p=0.0)
+        self.dropout2 = nn.Dropout(p=0.5)
         self.fc3 = nn.Linear(4096, num_classes)
 
     def forward(self, x):
@@ -117,7 +118,109 @@ input_shape = (batch_size, input_size)`,
         shape_code: `batch_size = 128
 input_shape = (batch_size, 3, 224, 224)`,
         loss_function: "nn.CrossEntropyLoss()",
-        optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3)",
+        optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)",
+        training_examples: "1000000"
+    },
+    resnet50: {
+        module_code: `def conv3x3(in_planes, out_planes, stride=1):
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
+
+def conv1x1(in_planes, out_planes, stride=1):
+    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+
+class Bottleneck(nn.Module):
+    expansion = 4
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(Bottleneck, self).__init__()
+        self.conv1 = conv1x1(inplanes, planes)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.conv2 = conv3x3(planes, planes, stride)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv3 = conv1x1(planes, planes * self.expansion)
+        self.bn3 = nn.BatchNorm2d(planes * self.expansion)
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+
+    def forward(self, x):
+        identity = x
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        out += identity
+        return self.relu(out)
+
+class Model(nn.Module):
+    def __init__(self, num_classes=1000):
+        super(Model, self).__init__()
+        self.inplanes = 64
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        self.layer1 = self._make_layer(64, 3)
+        self.layer2 = self._make_layer(128, 4, stride=2)
+        self.layer3 = self._make_layer(256, 6, stride=2)
+        self.layer4 = self._make_layer(512, 3, stride=2)
+        
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512 * 4, num_classes)
+
+    def _make_layer(self, planes, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * 4:
+            downsample = nn.Sequential(
+                conv1x1(self.inplanes, planes * 4, stride),
+                nn.BatchNorm2d(planes * 4),
+            )
+        layers = [Bottleneck(self.inplanes, planes, stride, downsample)]
+        self.inplanes = planes * 4
+        for _ in range(1, blocks):
+            layers.append(Bottleneck(self.inplanes, planes))
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.avgpool(x)
+        return self.fc(torch.flatten(x, 1))`,
+        shape_code: `batch_size = 128
+input_shape = (batch_size, 3, 224, 224)`,
+        loss_function: "nn.CrossEntropyLoss()",
+        optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9, weight_decay=1e-4)",
+        training_examples: "1000000"
+    },
+    transformer: {
+        module_code: `class Model(nn.Module):
+    def __init__(self, d_model=512, nhead=8, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=2048):
+        super(Model, self).__init__()
+        # Parameters exactly from Table 1 (Base Model)
+        self.transformer = nn.Transformer(
+            d_model=d_model,
+            nhead=nhead,
+            num_encoder_layers=num_encoder_layers,
+            num_decoder_layers=num_decoder_layers,
+            dim_feedforward=dim_feedforward,
+            batch_first=True
+        )
+        self.classifier = nn.Linear(d_model, 1000)
+
+    def forward(self, x):
+        # x shape: (batch_size, seq_len, d_model)
+        # Using x as both src and tgt to simulate the workload
+        out = self.transformer(x, x)
+        return self.classifier(out.mean(dim=1))`,
+        shape_code: `batch_size = 48
+seq_len = 512
+d_model = 512
+input_shape = (batch_size, seq_len, d_model)`,
+        loss_function: "nn.CrossEntropyLoss()",
+        optimizer: "torch.optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.98), eps=1e-9)",
         training_examples: "1000000"
     }
 };
