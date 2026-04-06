@@ -1,4 +1,5 @@
-// Makes a request to Modal using data on webpage, then updates webpage
+// Makes a request to Modal using data on webpage, then updates webpage.
+// This is a vibe-coded script and may contain bugs.
 
 const MODAL_URL = "https://hilberttyler1--training-cost-estimator-v2-training-cost.modal.run";
 
@@ -56,7 +57,7 @@ async function sendText() {
     }
 }
 
-// Presets are AI generated, don't assume they are the golden implementation.
+// Presets are AI generated, don't assume they are the best parameters to copy.
 const PRESETS = {
 mlp: {
         module_code: `class Model(nn.Module):
