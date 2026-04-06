@@ -48,7 +48,7 @@ async function sendText() {
 
     } catch (err) {
         // Error
-        errorEl.textContent = "Error: server not running, contact HilbertTyler1@gmail.com for demo.";
+        errorEl.textContent = "Error: contact HilbertTyler1@gmail.com for demo.";
     } finally {
         // Reset UI
         btn.disabled = false;
