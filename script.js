@@ -60,7 +60,8 @@ async function sendText() {
 // Presets are AI generated, don't assume they are the best parameters to copy.
 const PRESETS = {
 mlp: {
-        module_code: `class Model(nn.Module):
+module_code: `
+class Model(nn.Module):
     def __init__(self, input_size=3072, layer_sizes=[512, 256], output_size=10):
         super(Model, self).__init__()
         layers = []
@@ -73,16 +74,21 @@ mlp: {
         self.network = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.network(x)`,
-        shape_code: `batch_size = 128
+        return self.network(x)
+`,
+shape_code: `
+batch_size = 128
 input_size = 3072
-input_shape = (batch_size, input_size)`,
-        loss_function: "nn.CrossEntropyLoss()",
-        optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3)",
-        training_examples: "1000000"
-    },
-    alexnet: {
-        module_code: `class Model(nn.Module):
+input_shape = (batch_size, input_size)
+`,
+loss_function: "nn.CrossEntropyLoss()",
+optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3)",
+training_examples: "1000000"
+},
+
+alexnet: {
+module_code: `
+class Model(nn.Module):
     def __init__(self, num_classes=1000):
         super(Model, self).__init__()
         self.conv1 = nn.Conv2d(3, 96, kernel_size=11, stride=4, padding=2)
@@ -115,15 +121,20 @@ input_shape = (batch_size, input_size)`,
         x = torch.flatten(x, 1)
         x = self.dropout1(self.relu6(self.fc1(x)))
         x = self.dropout2(self.relu7(self.fc2(x)))
-        return self.fc3(x)`,
-        shape_code: `batch_size = 128
-input_shape = (batch_size, 3, 224, 224)`,
-        loss_function: "nn.CrossEntropyLoss()",
-        optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)",
-        training_examples: "1000000"
-    },
-    resnet50: {
-        module_code: `def conv3x3(in_planes, out_planes, stride=1):
+        return self.fc3(x)
+`,
+shape_code: `
+batch_size = 128
+input_shape = (batch_size, 3, 224, 224)
+`,
+loss_function: "nn.CrossEntropyLoss()",
+optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)",
+training_examples: "1000000"
+},
+
+resnet50: {
+module_code: `
+def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -189,15 +200,20 @@ class Model(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.avgpool(x)
-        return self.fc(torch.flatten(x, 1))`,
-        shape_code: `batch_size = 128
-input_shape = (batch_size, 3, 224, 224)`,
-        loss_function: "nn.CrossEntropyLoss()",
-        optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9, weight_decay=1e-4)",
-        training_examples: "1000000"
-    },
-    transformer: {
-        module_code: `class Model(nn.Module):
+        return self.fc(torch.flatten(x, 1))
+`,
+shape_code: `
+batch_size = 128
+input_shape = (batch_size, 3, 224, 224)
+`,
+loss_function: "nn.CrossEntropyLoss()",
+optimizer: "torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9, weight_decay=1e-4)",
+training_examples: "1000000"
+},
+
+transformer: {
+module_code: `
+class Model(nn.Module):
     def __init__(self, d_model=512, nhead=8, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=2048):
         super(Model, self).__init__()
         # Parameters exactly from Table 1 (Base Model)
@@ -215,15 +231,18 @@ input_shape = (batch_size, 3, 224, 224)`,
         # x shape: (batch_size, seq_len, d_model)
         # Using x as both src and tgt to simulate the workload
         out = self.transformer(x, x)
-        return self.classifier(out.mean(dim=1))`,
-        shape_code: `batch_size = 48
+        return self.classifier(out.mean(dim=1))
+`,
+shape_code: `
+batch_size = 48
 seq_len = 512
 d_model = 512
-input_shape = (batch_size, seq_len, d_model)`,
-        loss_function: "nn.CrossEntropyLoss()",
-        optimizer: "torch.optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.98), eps=1e-9)",
-        training_examples: "1000000"
-    }
+input_shape = (batch_size, seq_len, d_model)
+`,
+loss_function: "nn.CrossEntropyLoss()",
+optimizer: "torch.optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.98), eps=1e-9)",
+training_examples: "1000000"
+}
 };
 
 // Updates page with preset values
