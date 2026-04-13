@@ -1,111 +1,115 @@
 <!DOCTYPE html>
-<!--
-  This is the UI for the modal endpoint I'm using to estimate training cost.
-  The webpage was originally vibe-coded and has since been manually edited.
--->
+<!-- This is the UI for the modal endpoint I'm using to estimate training cost. -->
 <head>
   <title>PyTorch Training Cost Estimator</title>
 </head>
 <body>
-  
+
+  <!--------------------------------------------------------------------------->
   <!-- title -->
   <div>
     <h1>PyTorch Training Cost Estimator</h1>
-    <p>Estimates per-epoch training cost for PyTorch model.</p>
+    <p>This tool helps developers training PyTorch models figure out which GPU is most cost effective.</p>
+    <p>The tool profiles training a model across different GPUs and estimates the training cost per epoch for each GPU.</p>
   </div>
 
+  <hr>
+
+  <!--------------------------------------------------------------------------->
+  <!-- examples for user to select from -->
+  <div>
+    <h2>Examples</h2>
+    <div id="presets">
+      <button onclick="fillPreset('mlp')">MLP</button>
+      <button onclick="fillPreset('alexnet')">Alex Net</button>
+      <button onclick="fillPreset('resnet50')">ResNet-50</button>
+      <button onclick="fillPreset('transformer')">Transformer (Attention is All You Need)</button>
+    </div>
+  </div>
+
+  <hr>
+
+  <!--------------------------------------------------------------------------->
   <!-- form -->
   <div id="form">
     <div>
-      <label>NN.Module (must be named Model)</label>
       <div>
-        <textarea id="module_code" rows="10" cols="80" placeholder="PyTorch Module definition"></textarea>
-      </div>
-    </div>
-
-    <div>
-      <label>Input Shape (must set variable tuple `input_shape`)</label>
-      <div>
-        <textarea id="shape_code" rows="4" cols="80" placeholder="batch_size = 128&#10;input_size = 16384&#10;input_shape = (batch_size, input_size)"></textarea>
-      </div>
-    </div>
-
-    <div>
-      <label>Loss Function</label>
-      <input id="loss_function" type="text" placeholder="nn.CrossEntropyLoss()" />
-    </div>
-
-    <div>
-      <label>Optimizer</label>
-      <input id="optimizer" type="text" placeholder="torch.optim.SGD(model.parameters(), lr=1e-3)" />
-    </div>
-
-    <div>
-      <label>Training Examples Per Epoch</label>
-      <input id="training_examples" type="text" placeholder="1000000" />
-    </div>
-
-    <fieldset>
-      <legend>Target Hardware</legend>
-      <div>
-        <input type="radio" id="T4" name="target_hardware" value="T4" checked />
-        <label for="T4">T4 ($0.59 / hr)</label>
+        <label for="module">NN.Module (must be named `Model`):</label>
+        <div>
+          <textarea id="module" rows="10" cols="80" placeholder="PyTorch Module definition"></textarea>
+        </div>
       </div>
 
       <div>
-        <input type="radio" id="A10" name="target_hardware" value="A10" />
-        <label for="A10">A10 ($1.10 / hr)</label>
+        <label for="input_shape">Input Shape (must set variable tuple `input_shape`):</label>
+        <div>
+          <textarea id="input_shape" rows="4" cols="80"></textarea>
+        </div>
       </div>
 
       <div>
-        <input type="radio" id="A100-40GB" name="target_hardware" value="A100-40GB" />
-        <label for="A100-40GB">A100 40GB ($2.10 / hr)</label>
+        <label for="loss_fn">Loss Function:</label>
+        <input type="text" id="loss_fn"/>
       </div>
 
       <div>
-        <input type="radio" id="H100" name="target_hardware" value="H100" />
-        <label for="H100">H100 ($3.95 / hr)</label>
+        <label for="optimizer">Optimizer:</label>
+        <input type="text" id="optimizer"/>
       </div>
 
       <div>
-        <input type="radio" id="H200" name="target_hardware" value="H200" />
-        <label for="H200">H200 ($4.54 / hr)</label>
+        <label for="num_examples">Number of training examples:</label>
+        <input type="text" id="num_examples"/>
       </div>
-    </fieldset>
 
-    <fieldset>
-      <legend>Compiler Settings</legend>
-      <div>
-        <input type="radio" id="use-torch-compile" name="compile" value="use-torch-compile" checked />
-        <label for="use-torch-compile">Use torch.compile (recommended)</label>
-      </div>
-      <div>
-        <input type="radio" id="no-torch-compile" name="compile" value="no-torch-compile" />
-        <label for="no-torch-compile">Don't use torch.compile</label>
-      </div>
-    </fieldset>
+      <fieldset>
+        <legend>Target Hardware</legend>
+        <div>
+          <input type="radio" id="T4" name="target_hardware" value="T4" checked />
+          <label for="T4">T4 ($0.59 / hr)</label>
+        </div>
+        <div>
+          <input type="radio" id="A10" name="target_hardware" value="A10" />
+          <label for="A10">A10 ($1.10 / hr)</label>
+        </div>
+        <div>
+          <input type="radio" id="A100-40GB" name="target_hardware" value="A100-40GB" />
+          <label for="A100-40GB">A100 40GB ($2.10 / hr)</label>
+        </div>
+        <div>
+          <input type="radio" id="H100" name="target_hardware" value="H100" />
+          <label for="H100">H100 ($3.95 / hr)</label>
+        </div>
+        <div>
+          <input type="radio" id="H200" name="target_hardware" value="H200" />
+          <label for="H200">H200 ($4.54 / hr)</label>
+        </div>
+      </fieldset>
 
-    <button id="btn" onclick="sendText()" style="background-color: red;">Estimate Training Cost</button>
+      <fieldset>
+        <legend>Compiler Settings</legend>
+        <div>
+          <input type="radio" id="use-torch-compile" name="compile_option" checked />
+          <label for="use-torch-compile">Use torch.compile (recommended)</label>
+        </div>
+        <div>
+          <input type="radio" id="no-torch-compile" name="compile_option" />
+          <label for="no-torch-compile">Don't use torch.compile</label>
+        </div>
+      </fieldset>
 
-    <!-- response from API -->
-    <div id="price_per_epoch" style="background-color: green;"></div>
-    <div id="result"></div>
-    <div id="error"></div>
-
-    <hr>
-
-    <!-- examples for user to select from -->
-    <div>
-      <h2>Examples</h2>
-      <div id="presets">
-        <button onclick="fillPreset('mlp')">MLP</button>
-        <button onclick="fillPreset('alexnet')">Alex Net</button>
-        <button onclick="fillPreset('resnet50')">ResNet-50</button>
-        <button onclick="fillPreset('transformer')">Transformer (Attention is All You Need)</button>
-      </div>
+      <button id="submit" onclick="send_request()">Estimate Training Cost</button>
     </div>
   </div>
 
+  <!--------------------------------------------------------------------------->
+  <!-- response from API -->
+  <div id="price_per_epoch"></div>
+  <div id="result"></div>
+  <div id="error"></div>
+
+  <!--------------------------------------------------------------------------->
+  <!-- js -->
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,30 +1,28 @@
 // Makes a request to Modal using data on webpage, then updates webpage.
-// This is a vibe-coded script and may contain bugs.
 
 const MODAL_URL = "https://hilberttyler1--training-cost-estimator-v2-training-cost.modal.run";
 
-async function sendText() {
-    // Get data input
-    const module_code = document.getElementById("module_code").value;
-    const shape_code = document.getElementById("shape_code").value;
-    const loss_fn = document.getElementById("loss_function").value;
-    const opt = document.getElementById("optimizer").value;
-    const examples = document.getElementById("training_examples").value;
-    const target_hardware = document.querySelector('input[name="target_hardware"]:checked').value;
-    const compile = document.querySelector('input[name="compile"]:checked').value;
+const module_id = "module"
+const input_shape_id = "input_shape"
+const loss_fn_id = "loss_fn"
+const optimizer_id = "optimizer"
+const num_examples_id = "num_examples"
+const compile_option_query = 'input[name="compile_option"]:checked'
+const compile_set_value = "use-torch-compile"
+const target_hardware_query = 'input[name="target_hardware"]:checked'
+const submit_id = "submit"
+const price_per_epoch_id = "price_per_epoch"
+const result_id = "result"
+const error_id = "error"
 
-    //
-    const pricePerEpochEL = document.getElementById("price_per_epoch");
-    const resultEl = document.getElementById("result");
-    const errorEl = document.getElementById("error");
-    const btn = document.getElementById("btn");
 
+async function send_request() {
     // Clear UI
-    resultEl.textContent = "";
-    pricePerEpochEL.textContent = "";
-    errorEl.textContent = "";
-    btn.disabled = true;
-    btn.textContent = "This may take a minute...";
+    document.getElementById(submit_id).disabled = true
+    document.getElementById(submit_id).textContent = "This may take a minute..."
+    document.getElementById(price_per_epoch_id).textContent = ""
+    document.getElementById(result_id).textContent = "";
+    document.getElementById(error_id).textContent = "";
 
     try {
         // Make request to Modal
@@ -32,32 +30,33 @@ async function sendText() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                module_code: module_code,
-                shape_code: shape_code,
-                loss_function: loss_fn,
-                optimizer: opt,
-                training_examples: examples,
-                target_hardware: target_hardware,
-                compiler: compile === "use-torch-compile"
+                module_code: document.getElementById(module_id).value,
+                shape_code: document.getElementById(input_shape_id).value,
+                loss_function: document.getElementById(loss_fn_id).value,
+                optimizer: document.getElementById(optimizer_id).value,
+                training_examples: document.getElementById(num_examples_id).value,
+                target_hardware: document.querySelector(target_hardware_query).value,
+                compiler: document.querySelector(compile_option_query).id === compile_set_value
             })
         });
         const data = await response.json();
         
-        // Update UI
-        pricePerEpochEL.textContent = data.price_per_epoch
+        // Update UI with results
+        document.getElementById(price_per_epoch_id).textContent = data.price_per_epoch
+        const resultEl = document.getElementById(result_id);
         resultEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 
     } catch (err) {
         // Error
-        errorEl.textContent = "Error: contact HilbertTyler1@gmail.com for demo.";
+        // FIXME display error
+        document.getElementById(error_id).textContent = "Error: contact HilbertTyler1@gmail.com for demo.";
     } finally {
-        // Reset UI
-        btn.disabled = false;
-        btn.textContent = "Estimate Training Cost";
+        // Reset button
+        document.getElementById(submit_id).disabled = false
+        document.getElementById(submit_id).textContent = "Estimate Training Cost";
     }
 }
 
-// Presets are AI generated, don't assume they are the best parameters to copy.
 const PRESETS = {
 mlp: {
 module_code: `
@@ -251,9 +250,9 @@ function fillPreset(name) {
     const preset = PRESETS[name];
     if (!preset) return;
 
-    document.getElementById("module_code").value = preset.module_code.trim();
-    document.getElementById("shape_code").value = preset.shape_code.trim();
-    document.getElementById("loss_function").value = preset.loss_function;
-    document.getElementById("optimizer").value = preset.optimizer;
-    document.getElementById("training_examples").value = preset.training_examples;
+    document.getElementById(module_id).value = preset.module_code.trim();
+    document.getElementById(input_shape_id).value = preset.shape_code.trim();
+    document.getElementById(loss_fn_id).value = preset.loss_function;
+    document.getElementById(optimizer_id).value = preset.optimizer;
+    document.getElementById(num_examples_id).value = preset.training_examples;
 }
