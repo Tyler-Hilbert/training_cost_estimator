@@ -62,6 +62,7 @@
         <input type="text" id="num_examples"/>
       </div>
 
+      <!--
       <fieldset>
         <legend>Target Hardware</legend>
         <div>
@@ -85,6 +86,7 @@
           <label for="H200">H200 ($4.54 / hr)</label>
         </div>
       </fieldset>
+      -->
 
       <fieldset>
         <legend>Compiler Settings</legend>
@@ -104,8 +106,20 @@
 
   <!--------------------------------------------------------------------------->
   <!-- response from API -->
-  <div id="price_per_epoch"></div>
-  <div id="result"></div>
+  <div id="results-container">
+    <table id="cost_table" border="1" hidden>
+      <thead>
+        <tr>
+          <th>Hardware</th>
+          <th>Price per Epoch</th>
+        </tr>
+      </thead>
+      <tbody id="table_body"></tbody>
+    </table>
+  </div>
+
+  <!--<h3>Raw JSON Output</h3>-->
+  <pre id="json_output"></pre>
   <div id="error"></div>
 
   <!--------------------------------------------------------------------------->

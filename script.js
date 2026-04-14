@@ -1,6 +1,8 @@
 // Makes a request to Modal using data on webpage, then updates webpage.
 
-const MODAL_URL = "https://hilberttyler1--training-cost-estimator-v2-training-cost.modal.run";
+// FIXME handle timeout
+
+const MODAL_URL = "https://modal.com/apps/hilberttyler1/main/deployed/training-cost-estimator-v3";
 
 const module_id = "module"
 const input_shape_id = "input_shape"
@@ -11,8 +13,9 @@ const compile_option_query = 'input[name="compile_option"]:checked'
 const compile_set_value = "use-torch-compile"
 const target_hardware_query = 'input[name="target_hardware"]:checked'
 const submit_id = "submit"
-const price_per_epoch_id = "price_per_epoch"
-const result_id = "result"
+const table_id = "cost_table"
+const table_body_id = "table_body"
+const json_id = "json_output"
 const error_id = "error"
 
 
@@ -20,9 +23,12 @@ async function send_request() {
     // Clear UI
     document.getElementById(submit_id).disabled = true
     document.getElementById(submit_id).textContent = "This may take a minute..."
-    document.getElementById(price_per_epoch_id).textContent = ""
-    document.getElementById(result_id).textContent = "";
+    document.getElementById(json_id).textContent = "";
+    document.getElementById(table_id).hidden = true
+    document.getElementById(table_body_id).innerHTML = "";
     document.getElementById(error_id).textContent = "";
+
+
 
     try {
         // Make request to Modal
@@ -30,21 +36,31 @@ async function send_request() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                module_code: document.getElementById(module_id).value,
-                shape_code: document.getElementById(input_shape_id).value,
+                module: document.getElementById(module_id).value,
+                input_shape: document.getElementById(input_shape_id).value,
                 loss_function: document.getElementById(loss_fn_id).value,
                 optimizer: document.getElementById(optimizer_id).value,
-                training_examples: document.getElementById(num_examples_id).value,
-                target_hardware: document.querySelector(target_hardware_query).value,
-                compiler: document.querySelector(compile_option_query).id === compile_set_value
+                num_examples: document.getElementById(num_examples_id).value,
+                //target_hardware: document.querySelector(target_hardware_query).value,
+                compiler_option: document.querySelector(compile_option_query).id === compile_set_value
             })
         });
         const data = await response.json();
+
+        // Update table with responses
+        document.getElementById(table_id).hidden = false
+        Object.entries(data).forEach(([hardware, result]) => {
+            const row = `
+                <tr>
+                    <td>${hardware}</td>
+                    <td>${result.price_per_epoch}</td>
+                </tr>
+            `;
+            document.getElementById(table_body_id).innerHTML += row;
+        });
         
-        // Update UI with results
-        document.getElementById(price_per_epoch_id).textContent = data.price_per_epoch
-        const resultEl = document.getElementById(result_id);
-        resultEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        // Update UI with full response
+        document.getElementById(json_id).textContent = JSON.stringify(data, null, 4);
 
     } catch (err) {
         // Error
