@@ -2,7 +2,7 @@
 
 // FIXME handle timeout
 
-const MODAL_URL = "https://modal.com/apps/hilberttyler1/main/deployed/training-cost-estimator-v3";
+const MODAL_URL = "https://hilberttyler1--training-cost-estimator-v3-training-cost.modal.run";
 
 const module_id = "module"
 const input_shape_id = "input_shape"
