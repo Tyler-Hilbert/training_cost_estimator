@@ -2,6 +2,7 @@
 <!-- This is the UI for the modal endpoint I'm using to estimate training cost. -->
 <head>
   <title>PyTorch Training Cost Estimator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -18,7 +19,7 @@
   <!--------------------------------------------------------------------------->
   <!-- examples for user to select from -->
   <div>
-    <h2>Examples</h2>
+    <h2>Try one of These Examples:</h2>
     <div id="presets">
       <button onclick="fillPreset('mlp')">MLP</button>
       <button onclick="fillPreset('alexnet')">Alex Net</button>
@@ -31,6 +32,7 @@
 
   <!--------------------------------------------------------------------------->
   <!-- form -->
+  <h2>Input the following PyTorch Code</h2>
   <div id="form">
     <div>
       <div>
