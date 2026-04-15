@@ -1,8 +1,7 @@
 // Makes a request to Modal using data on webpage, then updates webpage.
 
-// FIXME handle timeout
-
-const MODAL_URL = "https://modal.com/apps/hilberttyler1/main/deployed/training-cost-estimator-v3";
+const MODAL_URL = "https://hilberttyler1--training-cost-estimator-v4-training-cost.modal.run";
+// TODO move Polling URL to separate endpoint then original request.
 
 const module_id = "module"
 const input_shape_id = "input_shape"
@@ -18,6 +17,7 @@ const table_body_id = "table_body"
 const json_id = "json_output"
 const error_id = "error"
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function send_request() {
     // Clear UI
@@ -28,14 +28,13 @@ async function send_request() {
     document.getElementById(table_body_id).innerHTML = "";
     document.getElementById(error_id).textContent = "";
 
-
-
     try {
         // Make request to Modal
         const response = await fetch(MODAL_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+                request_type: 'init',
                 module: document.getElementById(module_id).value,
                 input_shape: document.getElementById(input_shape_id).value,
                 loss_function: document.getElementById(loss_fn_id).value,
@@ -45,21 +44,16 @@ async function send_request() {
                 compiler_option: document.querySelector(compile_option_query).id === compile_set_value
             })
         });
-        const data = await response.json();
+        let data = await response.json();
 
-        // Update table with responses
-        document.getElementById(table_id).hidden = false
-        Object.entries(data).forEach(([hardware, result]) => {
-            const row = `
-                <tr>
-                    <td>${hardware}</td>
-                    <td>${result.price_per_epoch}</td>
-                </tr>
-            `;
-            document.getElementById(table_body_id).innerHTML += row;
-        });
-        
-        // Update UI with full response
+        // Update UI / Poll
+        let timestamp = data['timestamp']
+        while (data['status'] != 'complete') { // Poll waiting for response
+            await sleep(1000)
+            update_button_text()
+            data = await poll_for_response(timestamp)
+        }
+        update_with_response(data)
         document.getElementById(json_id).textContent = JSON.stringify(data, null, 4);
 
     } catch (err) {
@@ -70,6 +64,52 @@ async function send_request() {
         // Reset button
         document.getElementById(submit_id).disabled = false
         document.getElementById(submit_id).textContent = "Estimate Training Cost";
+    }
+}
+
+// Polls Modal API waiting for response to finish
+async function poll_for_response(timestamp) {
+    // Make request to Modal
+    const response = await fetch(MODAL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            request_type: 'polling',
+            timestamp: timestamp
+        })
+    });
+    const data = await response.json();
+    return data;
+}
+
+// Updates the table with prices
+function update_with_response(data) {
+    // Update table with responses
+    document.getElementById(table_id).hidden = false
+    Object.entries(data).forEach(([hardware, result]) => {
+        if (hardware == 'status') { // TODO will this still add `timestamp` to table?
+            return;
+        }
+
+        const row = `
+            <tr>
+                <td>${hardware}</td>
+                <td>${result.price_per_epoch}</td>
+            </tr>
+        `;
+        document.getElementById(table_body_id).innerHTML += row;
+    });
+}
+
+// Animates the ... in the button
+function update_button_text() {
+    let submit_button = document.getElementById(submit_id)
+    if (submit_button.textContent == "This may take a minute.") {
+        submit_button.textContent = "This may take a minute.."
+    } else if (submit_button.textContent == "This may take a minute..") {
+        submit_button.textContent = "This may take a minute..."
+    } else {
+        submit_button.textContent = "This may take a minute."
     }
 }
 
