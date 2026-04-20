@@ -10,8 +10,8 @@
   <!-- title -->
   <div>
     <h1>PyTorch Training Cost Estimator</h1>
-    <p>This tool helps developers training PyTorch models figure out which GPU is most cost effective.</p>
-    <p>The tool profiles training a model across different GPUs and estimates the training cost per epoch for each GPU.</p>
+    <p>Figure out which GPU is most cost effective for training your PyTorch model.</p>
+    <p>The API uses torch.cuda.Event to record the timing for 10 steps (after "warming up" the training loop). An estimate for how long a full epoch will take is calculated using the timing from the 10 steps. Modal's pricing rate for the specific GPU is applied to the timing estimate to come up with the per-epoch cost.</p>
   </div>
 
   <hr>
