@@ -298,6 +298,21 @@ input_shape = (batch_size, seq_len, d_model)
 loss_function: "nn.CrossEntropyLoss()",
 optimizer: "torch.optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.98), eps=1e-9)",
 training_examples: "1000000"
+},
+
+eurosat: {
+module_code: `
+import torchvision.models as models
+Model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+num_ftrs = Model.fc.in_features
+Model.fc = nn.Linear(num_ftrs, 10)
+`,
+shape_code: `
+input_shape = (1, 3, 64, 64)
+`,
+loss_function: "nn.CrossEntropyLoss()",
+optimizer: "optim.Adam(Model.parameters(), lr=0.0005)",
+training_examples: "16200"
 }
 };
 
